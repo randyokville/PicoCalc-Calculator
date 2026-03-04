@@ -1,5 +1,5 @@
 '   PicoCALC!  v1.1
-'   21:05  2026.03.02
+'   21:10  2026.03.03
 '
 ' Scientific calculator supporting
 ' math expressions as they would
@@ -19,27 +19,26 @@ Option BASE 1
 Const ColrYW=RGB(yellow) , ColrBE=RGB(0,0,70)
 Const ColrWE=RGB(white)
 Dim STRING Expr(6),VarTag(6),VarDisp(6)
-Dim STRING ExprIn,ExprCur,VarCur,OutStr,OptKey
+Dim STRING ExprIn,ExprCur,VarCur
+Dim STRING OutStr,OptKey
 Dim FLOAT Ans(6),A,B,C,D,E,F,AnsCur
-Dim FLOAT x,y,z
+Dim FLOAT X,Y,Z
 ' Index, Instance and pad length counters
-Dim INTEGER Indx,Inst, OutLen, OnOff
+Dim INTEGER Indx,Inst,OutLen,OnOff
 Dim INTEGER SyntxPg=1
 VarTag(1)="A" : VarTag(2)="B" : VarTag(3)="C"
 VarTag(4)="D" : VarTag(5)="E" : VarTag(6)="F"
-Color ColrYW, ColrBE  ' yellow on blue
 CLS ColrBE
-' draw the fixed screen elements
+' initialize the fixed screen elements
 Box 252,1,67,22,,ColrYW,ColrYW ' top rt corner box
 Text 256,4," PicoCalc",LT,7, ,ColrBE,ColrYW   ' smaller text
 Text 256,13,"CALCULATOR",LT,7, ,ColrBE,ColrYW  ' w/ inverted colors
-ShowInpBox(1)
-ShowVarBox(0)
-ShowSynBox(0)
 Color ColrWE,ColrBE
 RBox 1,68,319,110    ' results window
 Print @(25,63) "< results stack & variables A-F >"
-Color ColrYW,ColrBE
+ActiveBox("InpBox",1)
+ActiveBox("VarBox",0)
+ActiveBox("SynBox",0)
 TOP:
 ' zero out arrays & wipe answer stack
 Array Set 0,Ans()
@@ -107,7 +106,6 @@ Sub UpdtScr  ' update the results matrix
   ' coming here with ExprCur, AnsCur, Inst (=1->6)
   ' loop thru answer matrix backward and shift
   '   the results down one position
-  Color ColrWE,ColrBE
   For Indx=6 To 2 Step -1
     VarDisp(Indx)=VarDisp(Indx-1)
     Expr(Indx)=Expr(Indx-1)
@@ -147,8 +145,8 @@ End Sub   ' updtscr
 
 Sub UserVars  ' prompt for user vars x,y,z
   OptKey=""
-  ShowInpBox(0)  'main input box off
-  ShowVarBox(1)   ' UserVar box on
+  ActiveBox("InpBox",0)
+  ActiveBox("VarBox",1)
   Color ColrYW,ColrBE
   Do While OptKey=""
     OptKey=UCase$(Inkey$)
@@ -158,7 +156,7 @@ Sub UserVars  ' prompt for user vars x,y,z
         Color ColrYW,ColrBE
         Print @(15,215);
         Input "X= ", X
-        Print @(10,215) Space$(22)
+        Print @(10,215)i Space$(22)
         Print @(24,230) "X";
         Color ColrWE,ColrBE
         Print "= ";X;Space$(15-Len(Str$(X)))
@@ -186,15 +184,15 @@ Sub UserVars  ' prompt for user vars x,y,z
         OptKey=""
       End Select
   Loop
-  ShowVarBox(0)
-  ShowInpBox(1)
+  ActiveBox("VarBox",0)
+  ActiveBox("InpBox",1)
 End Sub   'uservars
 
 
 Sub Assist  'syntax help screen
   OptKey=""
-  ShowInpBox(0)
-  ShowSynBox(1)
+  ActiveBox("InpBox",0)
+  ActiveBox("SynBox",1)
   Color ColrWE,ColrBE
   Do While OptKey=""
     OptKey=UCase$(Inkey$)
@@ -203,76 +201,72 @@ Sub Assist  'syntax help screen
         OptKey=""
         Inc SyntxPg
         If SyntxPg>2 Then SyntxPg=2
-        ShowSynBox(1)
+        ActiveBox("SynBox",1)
       Case Chr$(128)  'up key
         OptKey=""
         Inc SyntxPg, -1
         If SyntxPg=0 Then SyntxPg=1
-        ShowSynBox(1)
+        ActiveBox("SynBox",1)
       Case Chr$(13)   'enter key
         Exit Do
       Case Else
         OptKey=""
       End Select
   Loop
-  ShowSynBox(0)
-  ShowInpBox(1)
-  Color ColrYW,ColrBE
+  ActiveBox("InpBox",1)
+  ActiveBox("SynBox",0)
 End Sub   'assist
 
 
-Sub ShowSynBox(OnOff)
-  If OnOff Then  '=1, box ON colors
-    Color ColrYW,ColrBE
-  Else           '=0, box OFF colors
+
+Sub ActiveBox(BoxNam$,OnOff)
+Select Case BoxNam$
+  Case "SynBox"
+    If OnOff Then  '=1, box ON colors
+      Color ColrYW,ColrBE
+    Else           '=0, box OFF colors
+      Color ColrWE,ColrBE
+    EndIf
+    RBox 195, 195, 124, 99
+    Print @(217,190) "< syntax >"
+    Print @(205,288) "<up><dn><ent>"
     Color ColrWE,ColrBE
-  EndIf
-  RBox 195, 195, 124, 99
-  Print @(217,190) "< syntax >"
-  Print @(205,288) "<up><dn><ent>"
-  Color ColrWE,ColrBE
-  If SyntxPg=1 Then
-    Print @(200,207) "+-*/   PI     "
-    Print @(200,222) "x^y    x^(1/y)"
-    Print @(200,237) "SQR(x) RND    "
-    Print @(200,252) "LOG(x) EXP(x) "
-    Print @(200,271) "    1of2      "
-  EndIf
-  If SyntxPg=2 Then
-    Print @(200,207) "SIN(x) ASIN(x)"
-    Print @(200,222) "COS(x) ACOS(x)"
-    Print @(200,237) "TAN(x) ATN(x) "
-    Print @(200,252) "DEG(x) RAD(x) "
-    Print @(200,271) "    2of2      "
-  EndIf
+    If SyntxPg=1 Then
+      Print @(200,207) "+-*/   PI     "
+      Print @(200,222) "x^y    x^(1/y)"
+      Print @(200,237) "SQR(x) RND    "
+      Print @(200,252) "LOG(x) EXP(x) "
+      Print @(200,271) "    1of2      "
+    EndIf
+    If SyntxPg=2 Then
+      Print @(200,207) "SIN(x) ASIN(x)"
+      Print @(200,222) "COS(x) ACOS(x)"
+      Print @(200,237) "TAN(x) ATN(x) "
+      Print @(200,252) "DEG(x) RAD(x) "
+      Print @(200,271) "    2of2      "
+    EndIf
+  Case "InpBox"
+    If OnOff Then  '=1, box on colors
+      Color ColrYW,ColrBE
+    Else           '=0, box off colors
+      Color ColrBE,ColrBE
+    EndIf
+    RBox 1, 26, 319, 25  ' input window coords
+    Print @(5,4) "<Q>uit <S>yntax <R>eset <V>ars";
+    Color ColrYW,ColrBE  ' reset normal
+    Print @(6,33) Space$(5);
+  Case "VarBox"
+    If OnOff Then  '=1, box on colors
+      Color ColrYW,ColrBE
+    Else           '=0, box off colors
+      Color ColrWE,ColrBE
+    EndIf
+    RBox 3, 195, 190, 99
+    Print @(22,288) "<X> <Y> <Z> <enter>"
+    Print @(25,190) "< user variables >"
+  End Select
   Color ColrYW,ColrBE  ' reset normal
-End Sub  'ShowSynBox
-
-
-Sub ShowInpBox(OnOff)
-  If OnOff Then  '=1, box on colors
-    Color ColrYW,ColrBE
-  Else           '=0, box off colors
-    Color ColrBE,ColrBE
-  EndIf
-  RBox 1, 26, 319, 25  ' input window coords
-  Print @(5,4) "<Q>uit <S>yntax <R>eset <V>ars";
-  Color ColrYW,ColrBE  ' reset normal
-  Print @(6,33) Space$(5);
-End Sub  ' ShowInpBox
-
-
-Sub ShowVarBox(OnOff)
-  If OnOff Then  '=1, box on colors
-    Color ColrYW,ColrBE
-  Else           '=0, box off colors
-    Color ColrWE,ColrBE
-  EndIf
-  RBox 3, 195, 190, 99
-  Print @(22,288) "<X> <Y> <Z> <enter>"
-  Print @(25,190) "< user variables >"
-  Color ColrYW,ColrBE  ' reset normal
-End Sub  ' ShowInpBox
+End Sub 'ActiveBox
 
 
 Sub mm.prompt  ' set system prompt
