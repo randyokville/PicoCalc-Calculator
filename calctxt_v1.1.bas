@@ -117,11 +117,11 @@ Sub UpdtScr  ' update the results matrix
     If VarDisp(Indx)="E" Then E=Ans(indx)
     If VarDisp(Indx)="F" Then F=Ans(indx)
     If Expr(Indx)<>"" Then  ' only applies initial 6 inputs
-    Color ColrYW,ColrBE
-    Print @(16,70+Indx*15) VarDisp(Indx);
-    Color ColrWE,ColrBE
-    OutStr= "= "+Str$(Ans(Indx))+" : "+Expr(Indx)
-    Print @(24,70+Indx*15) OutStr+Space$(36-Len(OutStr));
+      Color ColrYW,ColrBE
+      Print @(16,70+Indx*15) VarDisp(Indx);
+      Color ColrWE,ColrBE
+      OutStr= "= "+Str$(Ans(Indx))+" : "+Expr(Indx)
+      Print @(24,70+Indx*15) OutStr+Space$(36-Len(OutStr));
     EndIf
   Next Indx
   VarDisp(1)=VarTag(Inst)
